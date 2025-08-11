@@ -1,0 +1,77 @@
+{% extends "base/base.html" %}
+{% load tz %}
+{% block title %}Home Page{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Welcome to GetItDone!</h1>
+
+{% if user.is_authenticated %}
+  <p class="welcome-message page-title">Hello, {{ user.first_name }}! Here are your tasks:</p>
+
+  <div class="task-page">
+    <!-- Add Task Form -->
+    <form action="{% url 'add_task' %}" method="post" class="add-task">
+      {% csrf_token %}
+      <div class="input-group mb-3">
+        <input type="text" name="task" class="form-control" placeholder="Add Task here" aria-label="Add Task">
+        <button class="btn btn-dark" type="submit">Add</button>
+      </div>
+    </form>
+
+    <!-- Tasks Table -->
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Task</th>
+          <th scope="col">Created</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+          <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ task.title }}</td>
+            <td>{{ task.created_at|localtime|date:"M d, Y - H:i" }}</td>
+            <td>
+              {% if task.task_completed %}
+                <span class="badge bg-success">Completed</span>
+              {% else %}
+                <form action="{% url 'complete_task' task.id %}" method="post" style="display:inline;">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-dark" type="submit">Mark as Done</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4" class="text-center">No tasks yet. Add one above!</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Clear All Tasks -->
+  <div class="clear-tasks-container">
+    <form action="{% url 'clear_tasks' %}" method="post" onsubmit="return confirm('Are you sure you want to clear all tasks?');">
+      {% csrf_token %}
+      <button class="btn btn-danger" type="submit">Clear All Tasks</button>
+    </form>
+  </div>
+
+{% else %}
+  <!-- If user is not logged in -->
+  <div class="about-section">
+    <p class="welcome-message">
+      <strong>About GetItDone:</strong><br>
+      GetItDone is a simple and efficient task manager designed to help you stay organized and productive. Add tasks, track their completion status, and focus on what matters most.
+    </p>
+    <p class="welcome-message">
+      Please <a href="{% url 'login' %}">login</a> or <a href="{% url 'signup' %}">sign up</a> to manage your tasks.
+    </p>
+  </div>
+{% endif %}
+{% endblock %}
